@@ -40,6 +40,10 @@ import org.jruby.util.ByteList;
 @JRubyClass(name = "String", include = {"Enumerable", "Comparable"})
 public class RubyStringByteList extends RubyString {
 
+    private ByteList value;
+    protected volatile byte shareLevel = SHARE_LEVEL_NONE;
+    protected byte flags;
+
     RubyStringByteList(Ruby runtime, RubyClass rubyClass, ByteList value) {
         super(runtime, rubyClass, true, value);
     }
@@ -84,4 +88,36 @@ public class RubyStringByteList extends RubyString {
         super(runtime, rubyClass, objectSpace, value);
         value.setEncoding(encoding);
     }
+
+    // Field accessor overrides with direct field access
+
+    @Override
+    public ByteList getByteList() { return value; }
+
+    @Override
+    protected byte getShareLevel() { return shareLevel; }
+
+    @Override
+    protected void setShareLevel(byte level) { this.shareLevel = level; }
+
+    @Override
+    protected byte getStringFlags() { return flags; }
+
+    @Override
+    protected void setStringFlags(byte f) { this.flags = f; }
+
+    @Override
+    protected void orStringFlags(int mask) { this.flags |= (byte) mask; }
+
+    @Override
+    protected void andStringFlags(int mask) { this.flags &= (byte) mask; }
+
+    @Override
+    protected void setValueDirect(ByteList bl) { this.value = bl; }
+
+    @Override
+    public byte[] getBytes() { return value.bytes(); }
+
+    @Override
+    public Encoding getEncoding() { return value.getEncoding(); }
 }
