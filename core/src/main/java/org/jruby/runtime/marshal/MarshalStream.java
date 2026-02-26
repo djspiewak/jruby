@@ -67,7 +67,6 @@ import org.jruby.internal.runtime.methods.DynamicMethod;
 import org.jruby.runtime.encoding.MarshalEncoding;
 
 import static org.jruby.RubyBasicObject.getMetaClass;
-import static org.jruby.api.Access.stringClass;
 import static org.jruby.api.Convert.*;
 import static org.jruby.api.Error.typeError;
 import static org.jruby.runtime.marshal.MarshalCommon.*;
@@ -471,7 +470,7 @@ public class MarshalStream extends FilterOutputStream {
             writeObjectData(context, context.tru);
         } else {
             writeAndRegisterSymbol(asSymbol(context, SYMBOL_ENCODING).getBytes());
-            RubyString encodingString = new RubyString(context.runtime, stringClass(context), encoding.getName());
+            RubyString encodingString = RubyString.newString(context.runtime, encoding.getName());
             writeObjectData(context, encodingString);
         }
     }

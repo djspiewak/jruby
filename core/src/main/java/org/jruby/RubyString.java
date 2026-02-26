@@ -146,7 +146,8 @@ import static org.jruby.util.StringSupport.*;
  * all users must synchronize externally with writers.
  *
  */
-@JRubyClass(name="String", include={"Enumerable", "Comparable"})
+@JRubyClass(name="String", include={"Enumerable", "Comparable"},
+        overrides = {RubyStringByteList.class})
 public class RubyString extends RubyObject implements CharSequence, EncodingCapable, MarshalEncoding, CodeRangeable, Appendable, SimpleHash {
     static final ASCIIEncoding ASCII = ASCIIEncoding.INSTANCE;
     static final UTF8Encoding UTF8 = UTF8Encoding.INSTANCE;
@@ -419,79 +420,127 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
         if (!getEncoding().isAsciiCompatible()) throw getRuntime().newEncodingCompatibilityError("ASCII incompatible encoding: " + getEncoding());
     }
 
-    public RubyString(Ruby runtime, RubyClass rubyClass) {
-        this(runtime, rubyClass, ByteList.NULL_ARRAY);
-    }
-
-    public RubyString(Ruby runtime, RubyClass rubyClass, CharSequence value) {
-        this(runtime, rubyClass, value, UTF8);
-    }
-
-    public RubyString(Ruby runtime, RubyClass rubyClass, CharSequence value, Encoding enc) {
-        super(runtime, rubyClass);
+    // Non-delegating base constructors for subclasses (package-private)
+    RubyString(Ruby runtime, RubyClass klass, boolean objectSpace, ByteList value) {
+        super(runtime, klass, objectSpace);
+        assert this.getClass() != RubyString.class;
         assert value != null;
-        assert enc != null;
-
-        this.value = encodeBytelist(value, enc);
+        this.value = value;
     }
 
-    private RubyString(Ruby runtime, RubyClass rubyClass, String value, Encoding enc) {
-        super(runtime, rubyClass);
-        assert value != null;
-        assert enc != null;
-
-        this.value = encodeBytelist(value, enc);
-    }
-
-    private RubyString(Ruby runtime, RubyClass rubyClass, String value, Encoding enc, boolean objectspace) {
-        super(runtime, rubyClass, objectspace);
-        assert value != null;
-        assert enc != null;
-
-        this.value = encodeBytelist(value, enc);
-    }
-
-    public RubyString(Ruby runtime, RubyClass rubyClass, byte[] value) {
-        super(runtime, rubyClass);
+    RubyString(Ruby runtime, RubyClass klass, boolean objectSpace, byte[] value) {
+        super(runtime, klass, objectSpace);
+        assert this.getClass() != RubyString.class;
         assert value != null;
         this.value = new ByteList(value);
     }
 
+    @Deprecated
+    public RubyString(Ruby runtime, RubyClass rubyClass) {
+        super(runtime, rubyClass);
+        assert getClass() == RubyString.class;
+        this.value = new ByteList(ByteList.NULL_ARRAY);
+    }
+
+    @Deprecated
+    public RubyString(Ruby runtime, RubyClass rubyClass, CharSequence value) {
+        super(runtime, rubyClass);
+        assert getClass() == RubyString.class;
+        assert value != null;
+
+        this.value = encodeBytelist(value, UTF8);
+    }
+
+    protected RubyString(Ruby runtime, RubyClass rubyClass, CharSequence value, Encoding enc) {
+        super(runtime, rubyClass);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        assert enc != null;
+
+        this.value = encodeBytelist(value, enc);
+    }
+
+    protected RubyString(Ruby runtime, RubyClass rubyClass, String value, Encoding enc) {
+        super(runtime, rubyClass);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        assert enc != null;
+
+        this.value = encodeBytelist(value, enc);
+    }
+
+    protected RubyString(Ruby runtime, RubyClass rubyClass, String value, Encoding enc, boolean objectspace) {
+        super(runtime, rubyClass, objectspace);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        assert enc != null;
+
+        this.value = encodeBytelist(value, enc);
+    }
+
+    @Deprecated
+    public RubyString(Ruby runtime, RubyClass rubyClass, byte[] value) {
+        super(runtime, rubyClass);
+        assert getClass() == RubyString.class;
+        assert value != null;
+        this.value = new ByteList(value);
+    }
+
+    @Deprecated
     public RubyString(Ruby runtime, RubyClass rubyClass, ByteList value) {
         super(runtime, rubyClass);
+        assert getClass() == RubyString.class;
         assert value != null;
         this.value = value;
     }
 
+    @Deprecated
     public RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, boolean objectSpace) {
         super(runtime, rubyClass, objectSpace);
+        assert getClass() == RubyString.class;
         assert value != null;
         this.value = value;
     }
 
+    @Deprecated
     public RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, Encoding encoding, boolean objectSpace) {
-        this(runtime, rubyClass, value, objectSpace);
+        super(runtime, rubyClass, objectSpace);
+        assert getClass() == RubyString.class;
+        assert value != null;
+        this.value = value;
         value.setEncoding(encoding);
     }
 
     protected RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, Encoding enc, int cr) {
-        this(runtime, rubyClass, value);
+        super(runtime, rubyClass);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        this.value = value;
         flags |= cr;
         value.setEncoding(enc);
     }
 
     protected RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, Encoding enc) {
-        this(runtime, rubyClass, value);
+        super(runtime, rubyClass);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        this.value = value;
         value.setEncoding(enc);
     }
 
     protected RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, int cr) {
-        this(runtime, rubyClass, value);
+        super(runtime, rubyClass);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        this.value = value;
         flags |= cr;
     }
 
     protected RubyString(Ruby runtime, RubyClass rubyClass, ByteList value, int cr, boolean objectspace) {
-        this(runtime, rubyClass, value, objectspace);
+        super(runtime, rubyClass, objectspace);
+        assert this.getClass() != RubyString.class;
+        assert value != null;
+        this.value = value;
         flags |= cr;
     }
 
@@ -513,17 +562,17 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newStringLight(Ruby runtime, ByteList bytes) {
-        return new RubyString(runtime, runtime.getString(), bytes, false);
+        return new RubyStringByteList(runtime, runtime.getString(), bytes, false);
     }
 
     public static RubyString newStringLight(Ruby runtime, int size) {
         checkNegativeSize(runtime, size);
-        return new RubyString(runtime, runtime.getString(), new ByteList(size), false);
+        return new RubyStringByteList(runtime, runtime.getString(), new ByteList(size), false);
     }
 
     public static RubyString newStringLight(Ruby runtime, int size, Encoding encoding) {
         checkNegativeSize(runtime, size);
-        return new RubyString(runtime, runtime.getString(), new ByteList(size), encoding, false);
+        return new RubyStringByteList(runtime, runtime.getString(), new ByteList(size), encoding, false);
     }
 
     private static void checkNegativeSize(Ruby runtime, int size) {
@@ -533,35 +582,35 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newString(Ruby runtime, CharSequence str) {
-        return new RubyString(runtime, runtime.getString(), str, UTF8);
+        return new RubyStringByteList(runtime, runtime.getString(), str, UTF8);
     }
 
     public static RubyString newString(Ruby runtime, CharSequence str, Encoding encoding) {
-        return new RubyString(runtime, runtime.getString(), str, encoding);
+        return new RubyStringByteList(runtime, runtime.getString(), str, encoding);
     }
 
     public static RubyString newString(Ruby runtime, String str) {
-        return new RubyString(runtime, runtime.getString(), str, UTF8);
+        return new RubyStringByteList(runtime, runtime.getString(), str, UTF8);
     }
 
     public static RubyString newString(Ruby runtime, String str, Encoding encoding) {
-        return new RubyString(runtime, runtime.getString(), str, encoding);
+        return new RubyStringByteList(runtime, runtime.getString(), str, encoding);
     }
 
     public static RubyString newBinaryString(Ruby runtime, String str) {
-        return new RubyString(runtime, runtime.getString(), new ByteList(ByteList.plain(str), ASCIIEncoding.INSTANCE, false));
+        return new RubyStringByteList(runtime, runtime.getString(), new ByteList(ByteList.plain(str), ASCIIEncoding.INSTANCE, false));
     }
 
     public static RubyString newBinaryString(Ruby runtime, ByteList str) {
-        return new RubyString(runtime, runtime.getString(), str, ASCIIEncoding.INSTANCE, false);
+        return new RubyStringByteList(runtime, runtime.getString(), str, ASCIIEncoding.INSTANCE, false);
     }
 
     public static RubyString newUSASCIIString(Ruby runtime, String str) {
-        return new RubyString(runtime, runtime.getString(), str, USASCIIEncoding.INSTANCE);
+        return new RubyStringByteList(runtime, runtime.getString(), str, USASCIIEncoding.INSTANCE);
     }
 
     public static RubyString newString(Ruby runtime, byte[] bytes) {
-        return new RubyString(runtime, runtime.getString(), bytes);
+        return new RubyStringByteList(runtime, runtime.getString(), bytes);
     }
 
     public static RubyString newString(Ruby runtime, byte[] bytes, int start, int length) {
@@ -572,19 +621,19 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     public static RubyString newString(Ruby runtime, byte[] bytes, int start, int length, Encoding encoding) {
         byte[] copy = new byte[length];
         System.arraycopy(bytes, start, copy, 0, length);
-        return new RubyString(runtime, runtime.getString(), new ByteList(copy, encoding, false));
+        return new RubyStringByteList(runtime, runtime.getString(), new ByteList(copy, encoding, false));
     }
 
     public static RubyString newStringNoCopy(Ruby runtime, byte[] bytes, int start, int length, Encoding encoding) {
-        return new RubyString(runtime, runtime.getString(), new ByteList(bytes, start, length, encoding, false));
+        return new RubyStringByteList(runtime, runtime.getString(), new ByteList(bytes, start, length, encoding, false));
     }
 
     public static RubyString newString(Ruby runtime, ByteList bytes) {
-        return new RubyString(runtime, runtime.getString(), bytes);
+        return new RubyStringByteList(runtime, runtime.getString(), bytes);
     }
 
     public static RubyString newString(Ruby runtime, ByteList bytes, int coderange) {
-        return new RubyString(runtime, runtime.getString(), bytes, coderange);
+        return new RubyStringByteList(runtime, runtime.getString(), bytes, coderange);
     }
 
     public static RubyString newChilledString(Ruby runtime, ByteList bytes, int coderange, String file, int line) {
@@ -596,11 +645,11 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newString(Ruby runtime, ByteList bytes, Encoding encoding) {
-        return new RubyString(runtime, runtime.getString(), bytes, encoding);
+        return new RubyStringByteList(runtime, runtime.getString(), bytes, encoding);
     }
 
     static RubyString newString(Ruby runtime, byte b) {
-        return new RubyString(runtime, runtime.getString(), RubyInteger.singleCharByteList(b));
+        return new RubyStringByteList(runtime, runtime.getString(), RubyInteger.singleCharByteList(b));
     }
 
     @SuppressWarnings("ReferenceEquality")
@@ -610,11 +659,11 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newUTF8String(Ruby runtime, String str) {
-        return new RubyString(runtime, runtime.getString(), RubyEncoding.doEncodeUTF8(str));
+        return new RubyStringByteList(runtime, runtime.getString(), RubyEncoding.doEncodeUTF8(str));
     }
 
     public static RubyString newUTF16String(Ruby runtime, String str) {
-        return new RubyString(runtime, runtime.getString(), RubyEncoding.doEncodeUTF16(str));
+        return new RubyStringByteList(runtime, runtime.getString(), RubyEncoding.doEncodeUTF16(str));
     }
 
     @SuppressWarnings("ReferenceEquality")
@@ -624,11 +673,11 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newUTF8String(Ruby runtime, CharSequence str) {
-        return new RubyString(runtime, runtime.getString(), RubyEncoding.doEncodeUTF8(str));
+        return new RubyStringByteList(runtime, runtime.getString(), RubyEncoding.doEncodeUTF8(str));
     }
 
     public static RubyString newUTF16String(Ruby runtime, CharSequence str) {
-        return new RubyString(runtime, runtime.getString(), RubyEncoding.doEncodeUTF16(str));
+        return new RubyStringByteList(runtime, runtime.getString(), RubyEncoding.doEncodeUTF16(str));
     }
 
     /**
@@ -662,7 +711,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     // String construction routines by NOT byte[] buffer and making the target String shared
     public static RubyString newStringShared(Ruby runtime, RubyString orig) {
         orig.shareLevel = SHARE_LEVEL_BYTELIST;
-        RubyString str = new RubyString(runtime, runtime.getString(), orig.value);
+        RubyString str = new RubyStringByteList(runtime, runtime.getString(), orig.value);
         str.shareLevel = SHARE_LEVEL_BYTELIST;
         return str;
     }
@@ -677,13 +726,13 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
 
 
     public static RubyString newStringShared(Ruby runtime, ByteList bytes, int codeRange) {
-        RubyString str = new RubyString(runtime, runtime.getString(), bytes, codeRange);
+        RubyString str = new RubyStringByteList(runtime, runtime.getString(), bytes, codeRange);
         str.shareLevel = SHARE_LEVEL_BYTELIST;
         return str;
     }
 
     public static RubyString newStringShared(Ruby runtime, RubyClass clazz, ByteList bytes) {
-        RubyString str = new RubyString(runtime, clazz, bytes);
+        RubyString str = new RubyStringByteList(runtime, clazz, bytes);
         str.shareLevel = SHARE_LEVEL_BYTELIST;
         return str;
     }
@@ -691,7 +740,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     @SuppressWarnings("ReferenceEquality")
     public static RubyString newStringShared(Ruby runtime, RubyClass clazz, ByteList bytes, Encoding encoding) {
         if (bytes.getEncoding() == encoding) return newStringShared(runtime, clazz, bytes);
-        RubyString str = new RubyString(runtime, clazz, bytes.makeShared(bytes.getBegin(), bytes.getRealSize()), encoding);
+        RubyString str = new RubyStringByteList(runtime, clazz, bytes.makeShared(bytes.getBegin(), bytes.getRealSize()), encoding);
         str.shareLevel = SHARE_LEVEL_BUFFER; // since passing an encoding in does bytes.setEncoding(encoding)
         return str;
     }
@@ -719,7 +768,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
 
     public static RubyString newStringShared(Ruby runtime, byte[] bytes, int start, int length, Encoding encoding) {
         ByteList byteList = new ByteList(bytes, start, length, encoding, false);
-        RubyString str = new RubyString(runtime, runtime.getString(), byteList);
+        RubyString str = new RubyStringByteList(runtime, runtime.getString(), byteList);
         str.shareLevel = SHARE_LEVEL_BUFFER;
         return str;
     }
@@ -736,13 +785,13 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     private static final ByteList EMPTY_USASCII_BYTELIST = new ByteList(ByteList.NULL_ARRAY, USASCIIEncoding.INSTANCE);
 
     public static RubyString newAllocatedString(Ruby runtime, RubyClass metaClass) {
-        RubyString empty = new RubyString(runtime, metaClass, EMPTY_ASCII8BIT_BYTELIST);
+        RubyString empty = new RubyStringByteList(runtime, metaClass, EMPTY_ASCII8BIT_BYTELIST);
         empty.shareLevel = SHARE_LEVEL_BYTELIST;
         return empty;
     }
 
     public static RubyString newEmptyString(Ruby runtime, RubyClass metaClass) {
-        RubyString empty = new RubyString(runtime, metaClass, EMPTY_USASCII_BYTELIST);
+        RubyString empty = new RubyStringByteList(runtime, metaClass, EMPTY_USASCII_BYTELIST);
         empty.shareLevel = SHARE_LEVEL_BYTELIST;
         return empty;
     }
@@ -753,7 +802,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newStringNoCopy(Ruby runtime, RubyClass clazz, ByteList bytes) {
-        return new RubyString(runtime, clazz, bytes);
+        return new RubyStringByteList(runtime, clazz, bytes);
     }
 
     public static RubyString newStringNoCopy(Ruby runtime, byte[] bytes, int start, int length) {
@@ -841,7 +890,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
 
     public static RubyString newEmptyString(Ruby runtime, RubyClass metaClass, Encoding enc) {
         EmptyByteListHolder holder = getEmptyByteList(enc);
-        RubyString empty = new RubyString(runtime, metaClass, holder.bytes, holder.cr);
+        RubyString empty = new RubyStringByteList(runtime, metaClass, holder.bytes, holder.cr);
         empty.shareLevel = SHARE_LEVEL_BYTELIST;
         return empty;
     }
@@ -851,7 +900,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
     }
 
     public static RubyString newStringNoCopy(Ruby runtime, RubyClass clazz, ByteList bytes, Encoding enc, int cr) {
-        return new RubyString(runtime, clazz, bytes, enc, cr);
+        return new RubyStringByteList(runtime, clazz, bytes, enc, cr);
     }
 
     public static RubyString newStringNoCopy(Ruby runtime, ByteList bytes, Encoding enc, int cr) {
@@ -935,7 +984,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
 
     public final RubyString strDup(Ruby runtime, RubyClass clazz) {
         shareLevel = SHARE_LEVEL_BYTELIST;
-        RubyString dup = new RubyString(runtime, clazz, value);
+        RubyString dup = new RubyStringByteList(runtime, clazz, value);
         dup.shareLevel = SHARE_LEVEL_BYTELIST;
         dup.flags |= flags & CR_MASK;
 
@@ -981,7 +1030,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
             shared = newStringShared(runtime, meta, RubyInteger.singleCharByteList(value.getUnsafeBytes()[value.getBegin() + index]));
         } else {
             if (shareLevel == SHARE_LEVEL_NONE) shareLevel = SHARE_LEVEL_BUFFER;
-            shared = new RubyString(runtime, meta, value.makeShared(index, len));
+            shared = new RubyStringByteList(runtime, meta, value.makeShared(index, len));
             shared.shareLevel = SHARE_LEVEL_BUFFER;
         }
 
@@ -1002,7 +1051,7 @@ public class RubyString extends RubyObject implements CharSequence, EncodingCapa
             shared = RubyInteger.singleCharString(runtime, (byte) value.get(index), meta, enc);
         } else {
             if (shareLevel == SHARE_LEVEL_NONE) shareLevel = SHARE_LEVEL_BUFFER;
-            shared = new RubyString(runtime, meta, value.makeShared(index, len));
+            shared = new RubyStringByteList(runtime, meta, value.makeShared(index, len));
             shared.shareLevel = SHARE_LEVEL_BUFFER;
         }
         shared.copyCodeRangeForSubstr(this, enc); // no need to assign encoding, same bytelist shared
